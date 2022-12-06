@@ -7,7 +7,7 @@ const CollectionSchema = mongoose.Schema({
         type : String,
         required : [true,"Name is a Required Field"],
         trim : true,
-        maxlength : [100,"Max Length is 100 Character"];
+        maxlength : [100,"Max Length is 100 Character"],
     }
 },
 {
