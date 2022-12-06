@@ -2,7 +2,7 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 import Roles from ("../utils/Roles");
-import bcryptjs from 'bcryptjs';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 
@@ -59,6 +59,14 @@ User_Schema.methods = {
                 expiresIn: process.env.SESSION
             }
         )
+    },
+
+    //generate a forget password token
+    getForgetPasswordToken : function (){
+            const PwdToken = crypto.randomBytes(15).toString('hex')
+            this.ForgotPasswordToken = crypto.createhash("sha256").update(PwdToken).digest('hex');
+            this.ForgotPasswordExpiry = Date.now() + 2*60*60*100;
+            return PwdToken;
     },
 }
 const User = mongoose.model('User', User_Schema);
