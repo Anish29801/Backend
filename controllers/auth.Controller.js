@@ -28,5 +28,12 @@ export const SignUp = asyncHandler(
             user.password = undefined;
 
             res.cookie("token",token,cookieOptions)
+
+            res.status(200).json({
+                success : true,
+                message : "User Sign Up Successful",
+                token,
+                user
+            })
     }
 ) 
