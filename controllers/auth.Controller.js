@@ -37,3 +37,21 @@ export const SignUp = asyncHandler(
             })
     }
 ) 
+
+// @LogIn
+
+export const LogIn = asyncHandler(
+    async function (req, res) {
+    const { email, password } = req.body;
+
+    if(!email || !password){
+        throw new CustomError("Please Fill All the Details !", 401);
+        }
+    const user = await User.findOne({ email }).select("+password");
+
+    if(!user){
+        throw new CustomError("User Not Found In Records !", 401);
+        }
+        const isPasswordMatched = await user.comparePassword(password)
+    }
+)
