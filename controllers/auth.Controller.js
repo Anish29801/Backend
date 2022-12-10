@@ -3,6 +3,7 @@ const asyncHandler = require("../services/asyncConverter");
 const CustomError = require("../utils/CustomError");
 const {cookieOptions , cookieDeleter } = require("../utils/CookieHandler");
 const Mailer = require("../services/MailServices")
+import crypto from ("crypto")
 
 
 // @SignUp
@@ -84,9 +85,9 @@ export const LogOut = asyncHandler(
     }
 )
 
-// @Reset Password
+// @Reset Password Emailer
 
-export const ResetPwd = asyncHandler(
+export const ResetPwdEmailer = asyncHandler(
     async function (req,res) {
         const { email } = res.body;
         if(!email){
@@ -120,9 +121,68 @@ export const ResetPwd = asyncHandler(
 
             user.ForgotPasswordToken = undefined
             user.ForgotPasswordExpiry = undefined
-            
+            await user.save({vaildateBeforeSave : false})
+
+
             throw new CustomError(error.message,500)
             
         }
     }
 )
+
+// @Reset Password
+export const ResetPwd = asyncHandler(
+    async function (req,res) {
+        const {token : ResetPwdToken} = req.params;
+        const { password,confirmPassword } = req.body;
+        const ResetPwdGenToken = crypto
+        .createhash("sha256")
+        .update(ResetPwdToken)
+        .digest('hex');
+        
+        const UserWithPasswordToken = await user.findOne({
+            ForgotPasswordToken:ResetPwdGenToken,
+            ForgotPasswordExpiry: {$gt:Date.now()}
+        })
+
+        if(!UserWithPasswordToken){
+            throw new CustomError("Token Invaild !",401)
+        }
+
+        if(password !== confirmPassword){
+            throw new CustomError("Password did'nt match !",401);
+        }
+        user.password = confirmPassword;
+        user.ForgotPasswordToken = undefined;
+        user.ForgotPasswordExpiry = undefined;
+
+        await user.save();
+
+        const ConfirmToken = user.getJwtToken();
+        user.password = undefined;
+
+        res.cookie("token",ConfirmToken,cookieOptions)
+        res.status(200).json({
+            success : true,
+            message : "Operation Sucessful",
+            
+        })
+
+    }
+)
+
+
+// @Dashboard
+//@User Profile
+
+export const GetProfile = asyncHandler(
+    async function (req, res) {
+        const {user} = req;
+        if(!user){
+            throw new CustomError("User Not Found !",404)
+        }
+        res.status(200).json({
+            success : true,
+            user
+        })
+    })
